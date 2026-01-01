@@ -1810,7 +1810,19 @@ const allDiamonds = [
 
 // Format price with commas
 function formatPrice(price) {
-    return parseInt(price).toLocaleString();
+    // "1000 Ks" ကနေ နံပါတ်ပဲထုတ်ယူ (comma တွေကိုလဲဖယ်ရှား)
+    const numericString = price.replace(/[^0-9]/g, '');
+    
+    // နံပါတ်ကို integer အဖြစ် ပြောင်းပါ
+    const numberValue = parseInt(numericString);
+    
+    // နံပါတ်ဖြစ်မှ comma ခံပြီး " Ks" ပြန်ထည့်ပါ
+    if (!isNaN(numberValue)) {
+        return numberValue.toLocaleString('en-US') + ' Ks';
+    }
+    
+    // နံပါတ်မဟုတ်ရင် မူရင်းအတိုင်းပြန်ပို့
+    return price;
 }
 
 // Create all diamonds in one grid
@@ -1823,7 +1835,7 @@ function createAllDiamonds() {
                 <img src="${item.image}" alt="${item.diamonds} Diamonds" class="mm-img">
                 <div class="mm-card-info">
                     <div class="mm-card-name">${item.diamonds} Diamonds</div>
-                    <div class="mm-price">${formatPrice(item.price)} Ks</div>
+                    <div class="mm-price">${formatPrice(item.price)}</div>
                 </div>
             </div>
         `;
