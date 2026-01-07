@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
 <html lang="my">
 <head>
     <meta charset="UTF-8">
@@ -1304,6 +1304,16 @@
             <div class="server-title">MCGG Diamonds</div>
         </div>
     </div>
+    
+<div class="server-card" onclick="openPUBGScreen()" style="cursor: pointer;">
+    <div class="image-container">
+        <img src="https://i.ibb.co/QF1t3tcT/f9aaaed50daca209a9196fd7ab341f4c.jpg" alt="PUBG UC Server" class="server-image">
+    </div>
+    <div class="title-container">
+        <div class="server-title">PUBG Game UC </div>
+    </div>
+</div>
+
 </div>
     
     
@@ -1798,7 +1808,25 @@
     </div>
 </div>
 
+<!-- PUBG UC Server Page -->
+<div id="pubg-page" style="display: none;">
+    <div class="mm-top-bar">
+        <button onclick="closePUBGPage()" class="mm-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="mm-page-title">PUBG UC </div>
+    </div>
 
+    <!-- UC Packages -->
+    <div class="mm-section">
+        <div class="mm-section-header">
+            <i class="fas fa-gem"></i> UC Packages
+        </div>
+        <div class="mm-grid-3" id="pubg-uc-container">
+            <!-- UC packages will be loaded here -->
+        </div>
+    </div>
+</div>
 
 
     <div class="bottom-nav">
@@ -4397,6 +4425,589 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('MCGG Server initialized successfully');
     }, 500);
 });
+
+// ============================
+// PUBG UC SERVER - COMPLETE SCRIPT
+// ============================
+
+// PUBG Server Variables
+let pubgSelectedItem = { name: '', price: '' };
+let pubgUploadedImage = null;
+const PUBG_MAX_UPLOADS = 3;
+const PUBG_BOT_TOKEN = '8094270595:AAERziCUrOYf38DMOSReu1oOSEf2LLG_qS0';
+const PUBG_GROUP_ID = '@StarlarShopCom';
+
+// Open PUBG Screen
+function openPUBGScreen() {
+    console.log('Opening PUBG Screen...');
+    
+    // Hide all pages
+    hideAllPages();
+    
+    // Show PUBG page
+    const pubgPage = document.getElementById('pubg-page');
+    if (pubgPage) {
+        pubgPage.style.display = 'block';
+        loadPUBGPackages();
+        updateNavForPUBG();
+    }
+    
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Hide all pages
+function hideAllPages() {
+    const pages = [
+        '.announcement-section',
+        '.grid-container',
+        '#mlbb-mm-page',
+        '#mlbb-sg-page',
+        '#mlbb-ma-page',
+        '#mlbb-id-page',
+        '#mlbb-mcgg-page',
+        '#history-page'
+    ];
+    
+    pages.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) element.style.display = 'none';
+    });
+    
+    const faqPage = document.getElementById('faq-page');
+    if (faqPage) faqPage.style.display = 'none';
+}
+
+// Close PUBG Screen
+function closePUBGPage() {
+    const pubgPage = document.getElementById('pubg-page');
+    if (pubgPage) pubgPage.style.display = 'none';
+    
+    // Show home
+    document.querySelector('.announcement-section').style.display = 'block';
+    document.querySelector('.grid-container').style.display = 'grid';
+    
+    updateNavToHome();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Load PUBG UC Packages
+function loadPUBGPackages() {
+    const container = document.getElementById('pubg-uc-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    const pubgPackages = [
+        { uc: 60, price: "4,300", image: "https://i.ibb.co/4nTQ2yR0/Grid-Art-20260106-180915272.jpg" },
+        { uc: 325, price: "19,000", image: "https://i.ibb.co/8gHZHZCH/Grid-Art-20260106-180941363.jpg" },
+        { uc: 660, price: "37,000", image: "https://i.ibb.co/8gHZHZCH/Grid-Art-20260106-180941363.jpg" },
+        { uc: 1800, price: "92,500", image: "https://i.ibb.co/3nTVk6Q/Grid-Art-20260106-181020893.jpg" },
+        { uc: 3850, price: "183,000", image: "https://i.ibb.co/3nTVk6Q/Grid-Art-20260106-181020893.jpg" },
+        { uc: 8100, price: "362,000", image: "https://i.ibb.co/G43kDbTN/Grid-Art-20260106-181038913.jpg" }
+    ];
+    
+    pubgPackages.forEach(item => {
+        const packageHTML = `
+            <div class="mm-card" onclick="openPUBGOrder('UC ${item.uc}', '${item.price} Ks')">
+                <img src="${item.image}" alt="UC ${item.uc}" class="mm-img">
+                <div class="mm-card-info">
+                    <div class="mm-card-name">UC ${item.uc}</div>
+                    <div class="mm-price">${item.price} Ks</div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += packageHTML;
+    });
+}
+
+// Open PUBG Order Modal
+function openPUBGOrder(itemName, itemPrice) {
+    pubgSelectedItem = { name: itemName, price: itemPrice };
+    
+    let modal = document.getElementById('pubg-order-modal');
+    
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'pubg-order-modal';
+        modal.className = 'order-modal';
+        modal.style.display = 'flex';
+        
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>PUBG UC Order</h3>
+                    <button onclick="closePUBGOrderModal()" class="close-btn">&times;</button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="payment-methods">
+                        <div class="payment-info">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <div>
+                                <div class="payment-name">Wave Money</div>
+                                <div class="payment-number">09989310061 ( Kaung Myat San )</div>
+                            </div>
+                        </div>
+                        <div class="payment-info">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <div>
+                                <div class="payment-name">Kpay</div>
+                                <div class="payment-number">09989310061 ( Kaung Myat San )</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-summary">
+                        <div class="summary-item">
+                            <span>Item:</span>
+                            <span id="pubg-summary-name">${itemName}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Price:</span>
+                            <span id="pubg-summary-price">${itemPrice}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pubg-game-id"><i class="fas fa-user"></i> PUBG Game ID</label>
+                        <input type="text" id="pubg-game-id" placeholder="Enter your PUBG Game ID" oninput="autoCapitalize(this)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pubg-payment-screenshot"><i class="fas fa-camera"></i> ငွေလွှဲထားသောပုံထည့်ပါ</label>
+                        <div class="upload-area" id="pubg-upload-area" onclick="document.getElementById('pubg-payment-input').click()">
+                            <i class="fas fa-image"></i>
+                            <p>Select from gallery</p>
+                        </div>
+                        <input type="file" id="pubg-payment-input" accept="image/*" style="display: none;" onchange="handlePUBGImageUpload(event)">
+                        <div id="pubg-image-preview" style="display: none; margin-top: 10px; position: relative;">
+                            <img id="pubg-preview-img" src="" alt="Preview" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover;">
+                            <button type="button" onclick="removePUBGImage()" class="remove-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="submitPUBGOrder()" class="submit-btn">
+                        <i class="fab fa-telegram"></i> Order တင်မည်
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    } else {
+        document.getElementById('pubg-summary-name').textContent = itemName;
+        document.getElementById('pubg-summary-price').textContent = itemPrice;
+        modal.style.display = 'flex';
+    }
+    
+    document.getElementById('pubg-game-id').value = '';
+    removePUBGImage();
+    document.body.style.overflow = 'hidden';
+}
+
+// Close PUBG Order Modal
+function closePUBGOrderModal() {
+    const modal = document.getElementById('pubg-order-modal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Handle PUBG Image Upload
+function handlePUBGImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+        alert('ပုံအရွယ်အစား 5MB ထက်ကျော်လို့မရပါ။');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        pubgUploadedImage = e.target.result;
+        const preview = document.getElementById('pubg-image-preview');
+        const img = document.getElementById('pubg-preview-img');
+        
+        img.src = pubgUploadedImage;
+        preview.style.display = 'block';
+        document.getElementById('pubg-upload-area').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Remove PUBG Image
+function removePUBGImage() {
+    pubgUploadedImage = null;
+    document.getElementById('pubg-image-preview').style.display = 'none';
+    document.getElementById('pubg-upload-area').style.display = 'block';
+    document.getElementById('pubg-payment-input').value = '';
+}
+
+// Submit PUBG Order
+async function submitPUBGOrder() {
+    const gameId = document.getElementById('pubg-game-id').value.trim();
+    
+    if (!gameId) {
+        alert('PUBG Game ID ထည့်ပါ');
+        document.getElementById('pubg-game-id').focus();
+        return;
+    }
+    
+    if (!pubgUploadedImage) {
+        alert('ငွေလွှဲအတည်ပြုဓာတ်ပုံ ရွေးပါ');
+        return;
+    }
+    
+    // Check image upload count
+    const imageHash = createImageHash(pubgUploadedImage);
+    const orderCount = getImageOrderCount(imageHash);
+    
+    if (orderCount >= PUBG_MAX_UPLOADS) {
+        alert(`ဒီပုံကို ${PUBG_MAX_UPLOADS} ကြိမ် အော်ဒါတင်ပြီးပါပြီ။\nမတူညီတဲ့ပုံတစ်ခုရွေးပါ။`);
+        removePUBGImage();
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#pubg-order-modal .submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    submitBtn.disabled = true;
+    
+    try {
+        const orderData = {
+            itemName: pubgSelectedItem.name,
+            itemPrice: pubgSelectedItem.price,
+            gameId: gameId,
+            serverId: "No Server",
+            timestamp: new Date().toLocaleString('my-MM', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        };
+        
+        const success = await sendPUBGToTelegram(orderData);
+        
+        if (success) {
+            // Record successful order
+            recordSuccessfulOrder(imageHash);
+            
+            // Save to history
+            savePUBGOrderToHistory(orderData);
+            
+            alert('✅ အော်ဒါတင်ခြင်း အောင်မြင်ပါသည်။');
+            closePUBGOrderModal();
+        } else {
+            alert('❌ အော်ဒါတင်ရာမှာ အခက်အခဲရှိပါသည်။');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ အမှားတစ်ခုဖြစ်သွားပါသည်။');
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Send PUBG Order to Telegram (Simple Format)
+async function sendPUBGToTelegram(orderData) {
+    try {
+        // SIMPLE MESSAGE - NO EXTRA TEXT
+        const caption = `PUBG UC Order\nItem: ${orderData.itemName}\nPrice: ${orderData.itemPrice}\nGame ID: ${orderData.gameId}\nDate: ${orderData.timestamp}`;
+
+        const imageBlob = dataURLtoBlob(pubgUploadedImage);
+        const formData = new FormData();
+        formData.append('chat_id', PUBG_GROUP_ID);
+        formData.append('photo', imageBlob, 'payment.jpg');
+        formData.append('caption', caption);
+        
+        const response = await fetch(`https://api.telegram.org/bot${PUBG_BOT_TOKEN}/sendPhoto`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        return response.ok;
+        
+    } catch (error) {
+        console.error('Telegram send error:', error);
+        return false;
+    }
+}
+
+// Save PUBG Order to History (in mlbbOrders)
+function savePUBGOrderToHistory(orderData) {
+    try {
+        const orders = JSON.parse(localStorage.getItem('mlbbOrders') || '[]');
+        
+        orders.unshift({
+            itemName: orderData.itemName,
+            itemPrice: orderData.itemPrice,
+            gameId: orderData.gameId,
+            serverId: orderData.serverId,
+            timestamp: orderData.timestamp,
+            orderId: Date.now(),
+            gameType: "PUBG"
+        });
+        
+        if (orders.length > 50) {
+            orders.length = 50;
+        }
+        
+        localStorage.setItem('mlbbOrders', JSON.stringify(orders));
+        console.log('PUBG order saved to history');
+        
+    } catch (e) {
+        console.error('Error saving PUBG order:', e);
+    }
+}
+
+// Update Navigation for PUBG
+function updateNavForPUBG() {
+    const homeNav = document.querySelector('.nav-item:nth-child(1)');
+    const historyNav = document.querySelector('.nav-item:nth-child(2)');
+    const faqNav = document.querySelector('.nav-item:nth-child(3)');
+    
+    if (!homeNav) return;
+    
+    homeNav.innerHTML = `
+        <div class="nav-icon"><i class="fas fa-arrow-left"></i></div>
+        <div class="nav-text">Back</div>
+    `;
+    homeNav.onclick = function(e) {
+        e.preventDefault();
+        closePUBGPage();
+    };
+    
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    homeNav.classList.add('active');
+    
+    if (historyNav) {
+        historyNav.onclick = function(e) {
+            e.preventDefault();
+            closePUBGPage();
+            setTimeout(() => {
+                if (typeof showHistoryPage === 'function') {
+                    showHistoryPage();
+                }
+            }, 100);
+        };
+    }
+    
+    if (faqNav) {
+        faqNav.onclick = function(e) {
+            e.preventDefault();
+            closePUBGPage();
+            setTimeout(() => {
+                if (!document.getElementById('faq-page')) {
+                    createFAQPage();
+                }
+                if (typeof showFAQPage === 'function') {
+                    showFAQPage();
+                }
+            }, 100);
+        };
+    }
+}
+
+// Update Navigation to Home
+function updateNavToHome() {
+    const homeNav = document.querySelector('.nav-item:nth-child(1)');
+    const historyNav = document.querySelector('.nav-item:nth-child(2)');
+    const faqNav = document.querySelector('.nav-item:nth-child(3)');
+    
+    if (!homeNav) return;
+    
+    homeNav.innerHTML = `
+        <div class="nav-icon"><i class="fas fa-home"></i></div>
+        <div class="nav-text">Home</div>
+    `;
+    homeNav.onclick = function(e) {
+        e.preventDefault();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    };
+    
+    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+    homeNav.classList.add('active');
+    
+    if (historyNav) {
+        historyNav.onclick = function(e) {
+            e.preventDefault();
+            if (typeof showHistoryPage === 'function') {
+                showHistoryPage();
+            }
+        };
+    }
+    
+    if (faqNav) {
+        faqNav.onclick = function(e) {
+            e.preventDefault();
+            if (!document.getElementById('faq-page')) {
+                createFAQPage();
+            }
+            if (typeof showFAQPage === 'function') {
+                showFAQPage();
+            }
+        };
+    }
+}
+
+// Helper Functions
+function dataURLtoBlob(dataURL) {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new Blob([u8arr], { type: mime });
+}
+
+function autoCapitalize(input) {
+    if (input && input.value) {
+        input.value = input.value.toUpperCase();
+    }
+}
+
+function createImageHash(imageData) {
+    if (imageData.startsWith('data:image')) {
+        const base64Data = imageData.split(',')[1] || imageData;
+        return base64Data.substring(0, 1000);
+    }
+    return imageData;
+}
+
+function getImageOrderCount(imageHash) {
+    try {
+        const orderHistory = JSON.parse(localStorage.getItem('imageOrderHistory') || '[]');
+        return orderHistory.filter(item => item.imageHash === imageHash).length;
+    } catch (e) {
+        return 0;
+    }
+}
+
+function recordSuccessfulOrder(imageHash) {
+    try {
+        const orderHistory = JSON.parse(localStorage.getItem('imageOrderHistory') || '[]');
+        
+        orderHistory.push({
+            imageHash: imageHash,
+            timestamp: Date.now(),
+            date: new Date().toLocaleString()
+        });
+        
+        const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+        const filteredHistory = orderHistory.filter(item => item.timestamp > thirtyDaysAgo);
+        
+        localStorage.setItem('imageOrderHistory', JSON.stringify(filteredHistory));
+        
+    } catch (e) {
+        console.error('Error saving order record:', e);
+    }
+}
+
+// Initialize PUBG on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add PUBG card click event
+    setTimeout(() => {
+        const pubgCards = document.querySelectorAll('.server-card');
+        pubgCards.forEach(card => {
+            const title = card.querySelector('.server-title');
+            if (title && title.textContent.includes('PUBG')) {
+                card.onclick = function() {
+                    openPUBGScreen();
+                };
+                card.style.cursor = 'pointer';
+            }
+        });
+        
+        // Load PUBG packages if on PUBG page
+        if (document.getElementById('pubg-uc-container')) {
+            loadPUBGPackages();
+        }
+    }, 1000);
+});
+
+// Make sure existing functions don't conflict
+if (typeof openOrderModal !== 'undefined') {
+    // Keep original function but add PUBG check
+    const originalOpenOrderModal = openOrderModal;
+    window.openOrderModal = function(itemName, itemPrice) {
+        // Check if we're on PUBG page
+        const pubgPage = document.getElementById('pubg-page');
+        if (pubgPage && pubgPage.style.display === 'block') {
+            openPUBGOrder(itemName, itemPrice);
+        } else {
+            originalOpenOrderModal(itemName, itemPrice);
+        }
+    };
+}
+
+// Update History Page to show PUBG orders
+(function() {
+    // Override createHistoryCard to handle PUBG orders
+    const originalCreateHistoryCard = window.createHistoryCard;
+    if (originalCreateHistoryCard) {
+        window.createHistoryCard = function(order) {
+            // Check if this is a PUBG order
+            if (order.itemName && order.itemName.includes('UC')) {
+                // For PUBG orders
+                const date = new Date(order.orderId);
+                const formattedDate = date.toLocaleDateString('my-MM', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="history-card">
+                        <div class="history-header">
+                            <div class="history-item-name">${order.itemName}</div>
+                            <div class="history-price">${order.itemPrice}</div>
+                        </div>
+                        
+                        <div class="history-body">
+                            <div class="history-detail-row">
+                                <div class="history-label">
+                                    <i class="fas fa-user"></i>
+                                    PUBG Game ID
+                                </div>
+                                <div class="history-value">${order.gameId}</div>
+                            </div>
+                            
+                            <div class="history-detail-row">
+                                <div class="history-label">
+                                    <i class="fas fa-gamepad"></i>
+                                    Game Type
+                                </div>
+                                <div class="history-value">PUBG</div>
+                            </div>
+                        </div>
+                        
+                        <div class="history-footer">
+                            <div class="history-date">
+                                <i class="far fa-clock"></i> ${formattedDate}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // For non-PUBG orders, use original function
+            return originalCreateHistoryCard(order);
+        };
+    }
+})();
+
     </script>
 </body>
 </html>
